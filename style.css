@@ -1,0 +1,12 @@
+.children .item {
+    margin-left: 20px;
+}
+
+.selectAll{
+    margin-left: 14px;
+}
+
+.collapse {
+    width: 10px;
+    display: inline-block;
+}

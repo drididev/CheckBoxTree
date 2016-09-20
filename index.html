@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="style.css" type="text/css" rel="stylesheet">
+   <!-- <script src="bower_components/jquery/dist/jquery.min.js"></script>-->
+    <script src="treecheck.js"></script>
+</head>
+<body>
+<div id="checkboxtree"></div><br/><br/><br/><br/>
+<div id="checkboxtree2"></div>
+<script>
+    var id = 'checkboxtree';
+    var id2 = 'checkboxtree2';
+    var tree = [
+        {
+            item: {name: 'test', value: 1},
+            children: [{
+                item: {name: 'test 1', value: 2},
+                children: [{item: {name: 'test 1', value: 2}}, {item: {name: 'test 2', value: 3}}]
+            }, {item: {name: 'test 2', value: 3},
+                children: [{item: {name: 'test 1', value: 2},children: [{item: {name: 'test 1', value: 2},children: [{item: {name: 'test 1', value: 2}}, {item: {name: 'test 2', value: 3}}]}, {item: {name: 'test 2', value: 3}}]}, {item: {name: 'test 2', value: 3}}]
+            }]
+        }
+        ,
+        {
+            item: {name: 'test', value: 1},
+            children: [{
+                item: {name: 'test 1', value: 2},
+                children: [{item: {name: 'test 1', value: 2}}, {item: {name: 'test 2', value: 3}}]
+            }, {
+                item: {name: 'test 2', value: 3}
+            }]
+        }
+    ];
+    var checkbox = new checkboxTree({
+        selectAll: true ,
+        checkAllLevel : true ,
+        levelMax : 0,
+        radioMode : true ,
+        radioModeLevel: 0
+    }).updateTree(id, tree);
+    var checkbox1 = new checkboxTree({
+        selectAll: true ,
+        checkAllLevel : true ,
+        levelMax : 0,
+        radioMode : true ,
+        radioModeLevel: 1
+    }).updateTree(id2, tree);
+</script>
+
+</body>
+</html>
