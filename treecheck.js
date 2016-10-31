@@ -6,11 +6,11 @@
         this.selectedItems = [];
         var defaults = {
             selectAll: false, // check true if you want Select All checkbox
-            attributes : ['id'], // the attribut to make order by of response
-            radioMode: false , // check true if you want radio mode
-            radioModeLevel : 0 ,  // check number of level of radio mode
-            levelMax : 0 , // level Max
-            checkAllLevel : true // check true if you want wen check parent of his will be checked
+            attributes: ['id'], // the attribut to make order by of response
+            radioMode: false, // check true if you want radio mode
+            radioModeLevel: 0,  // check number of level of radio mode
+            levelMax: 0, // level Max
+            checkAllLevel: true // check true if you want wen check parent of his will be checked
 
         }
         this.options = defaults;
@@ -18,8 +18,9 @@
             this.options = extendDefaults(defaults, arguments[0]);
         }
 
-        if(this.options.radioMode == true && this.options.radioModeLevel == 0){
+        if (this.options.radioMode == true && this.options.radioModeLevel == 0) {
             this.options.selectAll = false;
+            this.options.checkAllLevel = false;
         }
     }
 
@@ -36,7 +37,7 @@
     checkboxTree.prototype.updateTree = function (id, tree) {
         this.tree = tree;
         this.id = id;
-        var item = browseTree.call(this, this.tree, item , 0);
+        var item = browseTree.call(this, this.tree, item, 1);
         document.getElementById(this.id).appendChild(item);
     }
 
@@ -64,22 +65,40 @@
                     }
                 })
                 val.childNodes.forEach(function (val) {
-                    if (val.className.indexOf('children') !== -1  && this.options.checkAllLevel && this.options.selectAll == false) {
+                    if (val.className.indexOf('children') !== -1 && this.options.checkAllLevel && this.options.selectAll == false) {
                         changeChildren.call(this, select, val);
                     }
-                },this);
+                }, this);
             }
-        },this)
+        }, this)
     }
 
-    function checkSelectedList(Item , treeItem) {
+    function checkSelectedList(Item, treeItem) {
         // Store the value of this
         var _ = Item;
         _.childNodes.forEach(function (val) {
-                    if (val.localName == 'input' && val.checked == true ) {
-                        this.selectedItems.push(treeItem.item);
-                    }
+            if (val.localName == 'input' && val.checked == true) {
+                this.selectedItems.push(treeItem.item);
+            }
         }, this)
+    }
+
+    function checkRadioList(Item, treeItem, level, event) {
+        // Store the value of this
+        var options = this.options;
+        if (event.item != Item) {
+            var _ = Item;
+            _.childNodes.forEach(function (val) {
+                if (val.localName == 'input' && val.checked == true && level == event.item.level) {
+                    val.checked = false;
+                    _.childNodes.forEach(function (child) {
+                        if (child.className.indexOf('children') !== -1 && options.checkAllLevel && options.selectAll == false) {
+                            changeChildren.call(this, val, child);
+                        }
+                    }, this);
+                }
+            }, this)
+        }
     }
 
     function changeParent(Item) {
@@ -115,7 +134,7 @@
                 checkbox.checked = checked;
             }
 
-            if (options.selectAll == false && options.checkAllLevel  && _.parentNode.className.indexOf('children') !== -1) {
+            if (options.selectAll == false && options.checkAllLevel && _.parentNode.className.indexOf('children') !== -1) {
                 changeParent.call(this, _.parentNode.parentNode);
             }
         }
@@ -130,22 +149,39 @@
         });
     }
 
+    function dispatcheRadioEvent(item) {
+        var event = new CustomEvent("checkRadioModeItem");
+        event.item = item;
+        var items = document.getElementById(this.id).getElementsByClassName("radioModeItem");
+        [].forEach.call(items, function (item) {
+            item.dispatchEvent(event);
+        });
+    }
+
     function togglecheckbox(Item) {
         // Store the value of this
         var _ = Item;
         _.checked = !_.checked;
     }
 
-    function browseTree(tree, parent,level) {
+    function hasClass(element, cls) {
+        return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
+    }
+
+    function browseTree(tree, parent, level) {
         var options = this.options;
         var item = document.createDocumentFragment();
         tree.forEach(function (val) {
             var thisItem = document.createElement("div");
-            thisItem.className = "item level"+(level+1);
-            if( options.radioMode && (options.radioModeLevel == 0 || options.radioModeLevel >= level )) {
+            thisItem.className = "item level" + (level);
+            thisItem.level = level;
+            if (options.radioMode && (options.radioModeLevel == 0 || options.radioModeLevel >= level )) {
                 thisItem.className += " radioModeItem";
+                thisItem.addEventListener('checkRadioModeItem', function (event) {
+                    checkRadioList.call(this, thisItem, val, level , event);
+                }.bind(this));
             }
-            if(options.levelMax == 0 ||  level < options.levelMax ) {
+            if (options.levelMax == 0 || level < options.levelMax) {
                 var collapseSpan = document.createElement("span");
                 collapseSpan.className = "collapse";
                 if (val.children && val.children.length > 0) {
@@ -162,21 +198,25 @@
             thisItem.appendChild(caption);
             caption.addEventListener('click', function () {
                 togglecheckbox.call(this, checkbox);
-                if(this.options.checkAllLevel)
-                changeParent.call(this, parent);
+                if (hasClass(thisItem, 'radioModeItem'))
+                    dispatcheRadioEvent.call(this, thisItem);
+                if (this.options.checkAllLevel)
+                    changeParent.call(this, parent);
                 dispatcheChangeEvent.call(this);
             }.bind(this));
             checkbox.addEventListener('change', function () {
-                if(this.options.checkAllLevel)
-                changeParent.call(this, parent);
+                if (hasClass(thisItem, 'radioModeItem'))
+                    dispatcheRadioEvent.call(this, thisItem);
+                if (this.options.checkAllLevel)
+                    changeParent.call(this, parent);
                 dispatcheChangeEvent.call(this);
             }.bind(this));
             if (val.children && val.children.length > 0) {
                 var children = document.createElement("div");
                 children.className = 'children';
-                children.style.display = 'none';
+                //children.style.display = 'none';
                 if (options.selectAll == true) {
-                    if( !options.radioMode || (options.radioModeLevel != 0 && options.radioModeLevel < level+1)) {
+                    if (!options.radioMode || (options.radioModeLevel != 0 && options.radioModeLevel < level + 1)) {
                         var selectAll = document.createElement("input");
                         selectAll.setAttribute('type', 'checkbox');
                         selectAll.className = 'selectAll';
@@ -196,24 +236,24 @@
                     }
                 } else {
                     caption.addEventListener('click', function () {
-                        if(this.options.checkAllLevel)
-                        changeChildren.call(this, checkbox, children);
+                        if (this.options.checkAllLevel && (!this.options.radioMode || this.options.radioModeLevel != 0 || thisItem.level >= this.options.radioModeLevel))
+                            changeChildren.call(this, checkbox, children);
                         dispatcheChangeEvent.call(this);
                     }.bind(this));
                     checkbox.addEventListener('change', function () {
-                        if(this.options.checkAllLevel)
-                        changeChildren.call(this, checkbox, children);
+                        if (this.options.checkAllLevel && (!this.options.radioMode || this.options.radioModeLevel != 0  || thisItem.level >= this.options.radioModeLevel))
+                            changeChildren.call(this, checkbox, children);
                         dispatcheChangeEvent.call(this);
                     }.bind(this));
                 }
 
-                if(options.levelMax == 0 || level < options.levelMax ) {
-                    children.appendChild(browseTree.call(this, val.children, thisItem , level + 1));
+                if (options.levelMax == 0 || level < options.levelMax) {
+                    children.appendChild(browseTree.call(this, val.children, thisItem, level + 1));
                     thisItem.appendChild(children);
-                }else{
-                    item.appendChild(browseTree.call(this, val.children, thisItem , level + 1));
+                } else {
+                    item.appendChild(browseTree.call(this, val.children, thisItem, level + 1));
                 }
-                if(options.levelMax == 0 ||  level < options.levelMax ) {
+                if (options.levelMax == 0 || level < options.levelMax) {
                     collapseSpan.addEventListener('click', function () {
                         toggleChildren.call(this, children, collapseSpan);
                     }.bind(this));
@@ -221,8 +261,8 @@
 
             }
             item.appendChild(thisItem);
-            thisItem.addEventListener('checkSelectedItem',function(){
-                checkSelectedList.call(this, thisItem , val);
+            thisItem.addEventListener('checkSelectedItem', function () {
+                checkSelectedList.call(this, thisItem, val);
             }.bind(this));
 
         }, this);

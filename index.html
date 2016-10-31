@@ -8,11 +8,9 @@
     <script src="treecheck.js"></script>
 </head>
 <body>
-<div id="checkboxtree"></div><br/><br/><br/><br/>
-<div id="checkboxtree2"></div>
+<div id="checkboxtree"></div>
 <script>
     var id = 'checkboxtree';
-    var id2 = 'checkboxtree2';
     var tree = [
         {
             item: {name: 'test', value: 1},
@@ -35,19 +33,13 @@
         }
     ];
     var checkbox = new checkboxTree({
-        selectAll: true ,
+        selectAll: false ,
         checkAllLevel : true ,
         levelMax : 0,
         radioMode : true ,
-        radioModeLevel: 0
+        radioModeLevel: 2
     }).updateTree(id, tree);
-    var checkbox1 = new checkboxTree({
-        selectAll: true ,
-        checkAllLevel : true ,
-        levelMax : 0,
-        radioMode : true ,
-        radioModeLevel: 1
-    }).updateTree(id2, tree);
+
 </script>
 
 </body>
